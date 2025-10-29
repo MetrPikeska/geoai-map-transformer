@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoAI Map Transformation System</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+    
+    <!-- Font Awesome pro ikony -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-map"></i> GeoAI Map Transformation System</h1>
+            <p>Transformace statických map do dynamických interaktivních map pomocí GeoAI</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Upload Section -->
+            <section class="upload-section">
+                <div class="card">
+                    <h2><i class="fas fa-upload"></i> Nahrání mapy</h2>
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-content">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Přetáhněte soubor sem nebo klikněte pro výběr</p>
+                            <p class="upload-hint">Podporované formáty: JPG, PNG, TIFF</p>
+                        </div>
+                        <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.tiff,.tif" hidden>
+                    </div>
+                    <div class="upload-info" id="uploadInfo" style="display: none;">
+                        <div class="file-info">
+                            <span class="filename" id="filename"></span>
+                            <span class="filesize" id="filesize"></span>
+                        </div>
+                        <button class="btn btn-primary" id="uploadBtn">
+                            <i class="fas fa-upload"></i> Nahrát mapu
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Processing Section -->
+            <section class="processing-section" id="processingSection" style="display: none;">
+                <div class="card">
+                    <h2><i class="fas fa-cogs"></i> Zpracování mapy</h2>
+                    <div class="processing-controls">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="enableGeoreferencing" checked>
+                                Povolit georeferencování
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="enableAIAnalysis" checked>
+                                Povolit AI analýzu
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label for="targetCRS">Cílový souřadnicový systém:</label>
+                            <select id="targetCRS">
+                                <option value="EPSG:5514">EPSG:5514 (S-JTSK)</option>
+                                <option value="EPSG:4326">EPSG:4326 (WGS84)</option>
+                                <option value="EPSG:3857">EPSG:3857 (Web Mercator)</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-success" id="processBtn">
+                            <i class="fas fa-play"></i> Spustit zpracování
+                        </button>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="progress-container" id="progressContainer" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-text" id="progressText">Příprava...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <div class="card">
+                    <h2><i class="fas fa-chart-line"></i> Výsledky zpracování</h2>
+                    <div class="results-info" id="resultsInfo">
+                        <!-- Výsledky budou dynamicky naplněny -->
+                    </div>
+                    
+                    <!-- Export Controls -->
+                    <div class="export-controls">
+                        <h3><i class="fas fa-download"></i> Export výsledků</h3>
+                        <div class="export-options">
+                            <button class="btn btn-outline" id="exportGeoJSON">
+                                <i class="fas fa-file-code"></i> GeoJSON
+                            </button>
+                            <button class="btn btn-outline" id="exportGeoTIFF">
+                                <i class="fas fa-file-image"></i> GeoTIFF
+                            </button>
+                            <button class="btn btn-outline" id="exportPNG">
+                                <i class="fas fa-image"></i> PNG
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Map Section -->
+            <section class="map-section" id="mapSection" style="display: none;">
+                <div class="card">
+                    <h2><i class="fas fa-map-marked-alt"></i> Interaktivní mapa</h2>
+                    <div class="map-controls">
+                        <div class="layer-controls">
+                            <h4>Vrstvy:</h4>
+                            <div class="layer-list" id="layerList">
+                                <!-- Vrstvy budou dynamicky přidány -->
+                            </div>
+                        </div>
+                        <div class="map-info">
+                            <div class="info-item">
+                                <span class="label">Souřadnicový systém:</span>
+                                <span class="value" id="mapCRS">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Přesnost (RMSE):</span>
+                                <span class="value" id="mapAccuracy">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="map" class="map-container"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 GeoAI Map Transformation System - Diplomová práce</p>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Zpracování...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="/static/script.js"></script>
+</body>
+</html>
